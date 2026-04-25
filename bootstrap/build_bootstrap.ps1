@@ -15,6 +15,8 @@ $ErrorActionPreference = $oe
 
 $script = Join-Path $pcRoot "bootstrap\vexpn_setup_bootstrap.py"
 $distSetup = Join-Path $pcRoot "dist\VexPN-Setup.exe"
+$appIcon = Join-Path $pcRoot "assets\app.ico"
+if (-not (Test-Path $appIcon)) { throw "assets\\app.ico missing (build icon)" }
 
 if ((Test-Path $distSetup) -and -not $env:FORCE_REBUILD) {
   try { Remove-Item -LiteralPath $distSetup -Force } catch { Write-Warning "Close VexPN-Setup.exe to rebuild" }
@@ -22,6 +24,7 @@ if ((Test-Path $distSetup) -and -not $env:FORCE_REBUILD) {
 
 & $python -m PyInstaller @(
   "--noconfirm", "--windowed", "--onefile", "--clean",
+  "--icon", $appIcon,
   "-n", "VexPN-Setup",
   "--distpath", (Join-Path $pcRoot "dist"),
   "--workpath", (Join-Path $pcRoot "build_bootstrap"),

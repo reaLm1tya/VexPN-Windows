@@ -31,6 +31,8 @@ if (Test-Path $genA) {
 $assetDir = Join-Path $Root "vexpn\assets"
 if (-not (Test-Path $assetDir)) { throw "vexpn\\assets missing; run tools\\gen_vevpn_assets.py" }
 $addData = $assetDir + ";" + "vexpn\assets"
+$appIcon = Join-Path $Root "assets\app.ico"
+if (-not (Test-Path $appIcon)) { throw "assets\\app.ico missing (build icon)" }
 
 # Удаляем старый exe, если не заблокирован
 $de = Join-Path $Root "dist\VexPN.exe"
@@ -43,6 +45,7 @@ $launcher = Join-Path $Root "launcher.py"
 & $python -m PyInstaller @(
   "--noconfirm", "--windowed", "--onefile", "--clean",
   "--uac-admin",
+  "--icon", $appIcon,
   "-n", "VexPN", "--paths", $Root,
   "--hidden-import=customtkinter", "--hidden-import=tkinter", "--hidden-import=PIL", "--hidden-import=PIL._tkinter_finder",
   "--add-data", $addData,
@@ -58,6 +61,7 @@ if (Test-Path $uEx) { try { Remove-Item -LiteralPath $uEx -Force } catch { Write
 Write-Host "==> UninstallVexPN.exe" -ForegroundColor Cyan
 & $python -m PyInstaller @(
   "--noconfirm", "--windowed", "--onefile", "--clean",
+  "--icon", $appIcon,
   "-n", "UninstallVexPN",
   "--distpath", (Join-Path $Root "dist"),
   "--workpath", (Join-Path $Root "build_uninstall"),

@@ -7,6 +7,7 @@
 #define MyAppURL "https://github.com/reaLm1tya/VexPN-Windows"
 #define MyAppExeName "VexPN.exe"
 #define MySingBox "sing-box.exe"
+#define MyIcon "assets\app.ico"
 
 [Setup]
 AppId={{C7F3A1B2-4D5E-4F6A-9B0C-1D2E3F4A5B6C}
@@ -16,6 +17,8 @@ AppVerName={#MyAppName} {#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL=https://github.com/reaLm1tya/VexPN-Windows/issues
+SetupIconFile={#MyIcon}
+UninstallDisplayIcon={app}\{#MyAppExeName}
 DefaultDirName={localappdata}\VexPN
 Uninstallable=yes
 CreateUninstallRegKey=yes
