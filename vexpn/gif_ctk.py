@@ -36,11 +36,11 @@ class GifPlayer(ctk.CTkFrame):
         size: tuple[int, int],
         **kwargs,
     ) -> None:
-        self._w, self._h = int(size[0]), int(size[1])
+        self._gif_w, self._gif_h = int(size[0]), int(size[1])
         super().__init__(
             master,
-            width=self._w,
-            height=self._h,
+            width=self._gif_w,
+            height=self._gif_h,
             fg_color=kwargs.pop("fg_color", "transparent"),
             **kwargs,
         )
@@ -60,15 +60,15 @@ class GifPlayer(ctk.CTkFrame):
                         frame = im.convert("RGBA")
                         d = im.info.get("duration", 100) or 100
                         self._durs.append(max(int(d), 20))
-                        frame = frame.resize((self._w, self._h), Image.Resampling.LANCZOS)
+                        frame = frame.resize((self._gif_w, self._gif_h), Image.Resampling.LANCZOS)
                         self._frames.append(ImageTk.PhotoImage(frame))
             except (OSError, ValueError, EOFError):
                 self._frames = []
         self._label = ctk.CTkLabel(
             self,
             text="",
-            width=self._w,
-            height=self._h,
+            width=self._gif_w,
+            height=self._gif_h,
         )
         self._label.pack()
         self._has_gif = bool(self._frames)
