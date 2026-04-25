@@ -40,6 +40,7 @@ Write-Host "==> PyInstaller: VexPN.exe" -ForegroundColor Cyan
 $launcher = Join-Path $Root "launcher.py"
 & $python -m PyInstaller @(
   "--noconfirm", "--windowed", "--onefile", "--clean",
+  "--uac-admin",
   "-n", "VexPN", "--paths", $Root,
   "--hidden-import=customtkinter", "--hidden-import=tkinter", "--hidden-import=PIL", "--hidden-import=PIL._tkinter_finder",
   "--add-data", $addData,

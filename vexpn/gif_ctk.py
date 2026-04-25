@@ -36,8 +36,14 @@ class GifPlayer(ctk.CTkFrame):
         size: tuple[int, int],
         **kwargs,
     ) -> None:
-        super().__init__(master, fg_color=kwargs.pop("fg_color", "transparent"), **kwargs)
-        self._w, self._h = size[0], size[1]
+        self._w, self._h = int(size[0]), int(size[1])
+        super().__init__(
+            master,
+            width=self._w,
+            height=self._h,
+            fg_color=kwargs.pop("fg_color", "transparent"),
+            **kwargs,
+        )
         self._name = name
         self._frames: list[ImageTk.PhotoImage] = []
         self._durs: list[int] = []
@@ -61,8 +67,8 @@ class GifPlayer(ctk.CTkFrame):
         self._label = ctk.CTkLabel(
             self,
             text="",
-            width=size[0],
-            height=size[1],
+            width=self._w,
+            height=self._h,
         )
         self._label.pack()
         self._has_gif = bool(self._frames)

@@ -106,8 +106,13 @@ class VexPNApp:
 
         f_conn = ctk.CTkFrame(parent, fg_color=BG)
         f_conn.grid(row=1, column=0, pady=6)
-        self._img_con_dis = ctk_image_from_asset("connection_disconnected.png", (210, 210))
-        self._img_con_pau = ctk_image_from_asset("connection_connected.png", (210, 210))
+        # iOS-parity: OFF=IMG_8971, ON=IMG_8970
+        self._img_con_dis = ctk_image_from_asset("IMG_8971.PNG", (210, 210))
+        self._img_con_pau = ctk_image_from_asset("IMG_8970.PNG", (210, 210))
+        if not self._img_con_dis:
+            self._img_con_dis = ctk_image_from_asset("connection_disconnected.png", (210, 210))
+        if not self._img_con_pau:
+            self._img_con_pau = ctk_image_from_asset("connection_connected.png", (210, 210))
         use_img = bool(self._img_con_dis and self._img_con_pau)
         self.btn_connect = ctk.CTkButton(
             f_conn,
