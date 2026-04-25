@@ -263,22 +263,27 @@ class App(tk.Tk):
                 )
             )
         except (urllib.error.HTTPError, urllib.error.URLError, OSError) as e:
-            ui(
-                lambda: self._work_done(
-                    False,
-                    "",
-                    f"Сеть/файл: {e!s}\n"
-                    "Проверьте raw-URL, Release или что файлы публично доступны.",
-                )
+            # нельзя использовать `e` внутри lambda без привязки — после except e обнуляется
+            http = ""
+            if isinstance(e, urllib.error.HTTPError):
+                http = f" HTTP {e.code}"
+                try:
+                    body = (e.read() or b"").decode("utf-8", errors="replace")[:400]
+                except Exception:
+                    body = ""
+                if body.strip():
+                    http += f"\nОтвет: {body.strip()}"
+            err_msg = (
+                f"Сеть/файл{http}: {e!s}\n\n"
+                "Проверьте:\n"
+                "• Release: https://github.com/reaLm1tya/VexPN-Windows/releases — "
+                "должны быть вложения VexPN.exe и sing-box.exe (имена точно такие);\n"
+                "• raw: uninstall_* и install_manifest.json в ветке main."
             )
+            ui(lambda m=err_msg: self._work_done(False, "", m))
         except (ValueError, json.JSONDecodeError, TypeError) as e:
-            ui(
-                lambda: self._work_done(
-                    False,
-                    "",
-                    f"Манифест или ответ: {e!s}",
-                )
-            )
+            err_msg2 = f"Манифест или ответ: {e!s}"
+            ui(lambda m=err_msg2: self._work_done(False, "", m))
         finally:
             if tmpd and os.path.isdir(tmpd):
                 shutil.rmtree(tmpd, ignore_errors=True)
