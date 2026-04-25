@@ -1,0 +1,9 @@
+build/
+build_bootstrap/
+dist/
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+tools/sing-box.exe
+installer_output/

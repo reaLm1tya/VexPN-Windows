@@ -1,0 +1,15 @@
+{
+  "version": "1.0.0",
+  "app_name": "VexPN",
+  "base_url": "",
+  "files": [
+    {
+      "path": "VexPN.exe",
+      "url": "https://github.com/reaLm1tya/VexPN-Windows/releases/latest/download/VexPN.exe"
+    },
+    {
+      "path": "sing-box.exe",
+      "url": "https://github.com/reaLm1tya/VexPN-Windows/releases/latest/download/sing-box.exe"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "version": "1.0.0",
+  "app_name": "VexPN",
+  "base_url": "https://raw.githubusercontent.com/reaLm1tya/VexPN-Windows/main/dist/",
+  "files": [
+    { "path": "VexPN.exe" },
+    { "path": "sing-box.exe" }
+  ],
+  "comment": "Вариант A: base_url + path (скачивание с raw.githubusercontent.com/.../pc/dist/). Вариант B: у каждого элемента files свой url (удобно для GitHub Releases) — см. install_manifest.releases.example.json"
+}
