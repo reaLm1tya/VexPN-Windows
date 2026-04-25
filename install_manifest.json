@@ -12,6 +12,10 @@
       "url": "https://github.com/reaLm1tya/VexPN-Windows/releases/latest/download/sing-box.exe"
     },
     {
+      "path": "wintun.dll",
+      "url": "https://github.com/reaLm1tya/VexPN-Windows/releases/latest/download/wintun.dll"
+    },
+    {
       "path": "UninstallVexPN.exe",
       "url": "https://github.com/reaLm1tya/VexPN-Windows/releases/latest/download/UninstallVexPN.exe"
     },

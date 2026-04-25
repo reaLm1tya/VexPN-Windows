@@ -14,12 +14,14 @@ $ErrorActionPreference = "Continue"
 $ErrorActionPreference = $oldEap
 
 $sb = Join-Path $Root "tools\sing-box.exe"
+$wt = Join-Path $Root "tools\wintun.dll"
 $dl = Join-Path $Root "tools\download_singbox.ps1"
 if (-not (Test-Path $sb) -and (Test-Path $dl)) {
   Write-Host "==> download sing-box" -ForegroundColor Cyan
   & powershell -NoProfile -ExecutionPolicy Bypass -File $dl
 }
 if (-not (Test-Path $sb)) { Write-Warning "tools\\sing-box.exe missing; VPN kernel will not be in dist until you run tools\\download_singbox.ps1" }
+if (-not (Test-Path $wt)) { Write-Warning "tools\\wintun.dll missing; TUN may fail on Windows" }
 
 $genA = Join-Path $Root "tools\gen_vevpn_assets.py"
 if (Test-Path $genA) {
@@ -65,7 +67,8 @@ $ue = Join-Path $Root "dist\UninstallVexPN.exe"
 if (-not (Test-Path $ue)) { throw "dist\\UninstallVexPN.exe not created" }
 if (Test-Path $sb) {
   Copy-Item -LiteralPath $sb -Destination (Join-Path $Root "dist") -Force
-  Write-Host "OK: dist\\VexPN.exe + dist\\sing-box.exe" -ForegroundColor Green
+  if (Test-Path $wt) { Copy-Item -LiteralPath $wt -Destination (Join-Path $Root "dist") -Force }
+  Write-Host "OK: dist\\VexPN.exe + dist\\sing-box.exe (+ wintun.dll if present)" -ForegroundColor Green
 } else {
   Write-Warning "dist has only VexPN.exe (no sing-box)"
 }

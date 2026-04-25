@@ -40,6 +40,12 @@ def _find_singbox() -> Path | None:
     return None
 
 
+def _has_wintun_near_singbox(sing_path: Path) -> bool:
+    if sys.platform != "win32":
+        return True
+    return (sing_path.parent / "wintun.dll").is_file()
+
+
 class SingBoxRunner:
     def __init__(self) -> None:
         self._p: subprocess.Popen[str] | None = None
@@ -69,6 +75,12 @@ class SingBoxRunner:
                 return (
                     False,
                     "Не найден sing-box.exe. Поместите sing-box.exe рядом с VexPN.exe или в PATH. См. build/download_singbox.ps1",
+                )
+            if not _has_wintun_near_singbox(sing):
+                return (
+                    False,
+                    "Не найден wintun.dll рядом с sing-box.exe. Установите WireGuard (драйвер wintun) "
+                    "или положите wintun.dll рядом с sing-box.exe.",
                 )
             try:
                 cfg = build_tun_config(vless_uri)
