@@ -4,8 +4,16 @@
 
 ## Сборка
 
-- `.\build.ps1` — `dist\VexPN.exe`, `dist\sing-box.exe`, `dist\VexPN-Setup.exe`, (опц.) установщик Inno
-- `.\tools\download_singbox.ps1` — скачать `sing-box.exe` при необходимости
+В каталоге `pc\` из PowerShell:
+
+```powershell
+Set-Location путь\к\pc
+powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
+```
+
+Скрипт делает: `pip install -r requirements.txt` → (при необходимости) `tools\download_singbox.ps1` → `VexPN.exe` (PyInstaller) → копия `sing-box` в `dist\` → **Inno** `installer_output\VexPN-Windows-Setup-1.0.0.exe` (если установлен [Inno Setup 6](https://jrsoftware.org/isdl.php)) → **`dist\VexPN-Setup.exe`** + `VexPN-Setup.config.json`.
+
+- Отдельно онлайн-установщик: `.\bootstrap\build_bootstrap.ps1`
 
 ## Как `VexPN-Setup` берёт файлы с GitHub
 

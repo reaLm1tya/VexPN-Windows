@@ -1,46 +1,75 @@
-# Сборка: VexPN.exe + sing-box в dist. Установщик: installer.iss (Inno Setup 6).
+# Полная сборка: VexPN.exe, sing-box в dist, VexPN-Setup.exe, (если установлен) Inno
 $ErrorActionPreference = "Stop"
-Set-Location $PSScriptRoot
-if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
-  throw "python not in PATH"
+$Root = $PSScriptRoot
+Set-Location $Root
+
+$py = Get-Command python -ErrorAction SilentlyContinue; if (-not $py) { $py = Get-Command py -ErrorAction SilentlyContinue }
+if (-not $py) { throw "python not in PATH" }
+$python = $py.Source
+
+Write-Host "==> pip + requirements" -ForegroundColor Cyan
+$oldEap = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
+& $python -m pip install -q -r (Join-Path $Root "requirements.txt")
+$ErrorActionPreference = $oldEap
+
+$sb = Join-Path $Root "tools\sing-box.exe"
+$dl = Join-Path $Root "tools\download_singbox.ps1"
+if (-not (Test-Path $sb) -and (Test-Path $dl)) {
+  Write-Host "==> download sing-box" -ForegroundColor Cyan
+  & powershell -NoProfile -ExecutionPolicy Bypass -File $dl
 }
-python -m pip install -q -r requirements.txt
-if (-not (Test-Path "tools\sing-box.exe")) {
-  Write-Host "Downloading sing-box…"
-  & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "tools\download_singbox.ps1")
+if (-not (Test-Path $sb)) { Write-Warning "tools\\sing-box.exe missing; VPN kernel will not be in dist until you run tools\\download_singbox.ps1" }
+
+# Удаляем старый exe, если не заблокирован
+$de = Join-Path $Root "dist\VexPN.exe"
+if (Test-Path $de) {
+  try { Remove-Item -LiteralPath $de -Force } catch { Write-Warning "Close VexPN.exe, then re-run build.ps1" }
 }
-& pyinstaller @(
-  "--noconfirm", "--windowed", "--onefile", "-n", "VexPN", "--paths", ".",
+
+Write-Host "==> PyInstaller: VexPN.exe" -ForegroundColor Cyan
+$launcher = Join-Path $Root "launcher.py"
+& $python -m PyInstaller @(
+  "--noconfirm", "--windowed", "--onefile", "--clean",
+  "-n", "VexPN", "--paths", $Root,
   "--hidden-import=customtkinter", "--hidden-import=tkinter",
   "--collect-all", "customtkinter",
-  "launcher.py"
+  $launcher
 )
-if ((Test-Path "dist\VexPN.exe") -and (Test-Path "tools\sing-box.exe")) {
-  Copy-Item "tools\sing-box.exe" "dist\" -Force
-  Write-Host "OK: dist\\VexPN.exe + dist\\sing-box.exe"
+
+if (-not (Test-Path $de)) { throw "dist\\VexPN.exe not created" }
+if (Test-Path $sb) {
+  Copy-Item -LiteralPath $sb -Destination (Join-Path $Root "dist") -Force
+  Write-Host "OK: dist\\VexPN.exe + dist\\sing-box.exe" -ForegroundColor Green
 } else {
-  if (-not (Test-Path "dist\VexPN.exe")) { throw "dist\\VexPN.exe missing" }
-  Write-Warning "tools\\sing-box.exe missing - install via tools\\download_singbox.ps1, then re-run to copy to dist"
+  Write-Warning "dist has only VexPN.exe (no sing-box)"
 }
 
+# Inno Setup: offline installer
 $iscc = $null
-$paths = @(
-  "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
-  "C:\Program Files\Inno Setup 6\ISCC.exe"
-) + (Get-Command iscc -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source)
-foreach ($p in $paths) {
-  if ($p -and (Test-Path $p)) { $iscc = $p; break }
-}
-if ($iscc -and (Test-Path "installer.iss")) {
-  & $iscc (Join-Path $PSScriptRoot "installer.iss")
-  Write-Host "Install kit: pc\\installer_output\\"
+foreach ($cand in @(
+    "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+    "$env:ProgramFiles\Inno Setup 6\ISCC.exe"
+  )) { if (Test-Path $cand) { $iscc = $cand; break } }
+if ($iscc) {
+  $iss = Join-Path $Root "installer.iss"
+  if (Test-Path $iss) {
+    Write-Host "==> Inno Setup" -ForegroundColor Cyan
+    & $iscc $iss
+    Write-Host "OK: installer_output\\" -ForegroundColor Green
+  }
 } else {
-  Write-Host "Inno Setup not found. Install from https://jrsoftware.org/isdl.php  then: ISCC installer.iss"
+  Write-Host "Inno Setup 6 not found - skip offline installer. Install: https://jrsoftware.org/isdl.php" -ForegroundColor DarkYellow
 }
 
-# Онлайн-установщик (тянет VexPN.exe + sing-box с манифеста в репо)
-$boot = Join-Path $PSScriptRoot "bootstrap\build_bootstrap.ps1"
+# Онлайн-установщик
+$boot = Join-Path $Root "bootstrap\build_bootstrap.ps1"
 if (Test-Path $boot) {
-  Write-Host "Building VexPN-Setup.exe (Git manifest downloader)…"
-  & powershell -NoProfile -ExecutionPolicy Bypass -File $boot
-}
+  Write-Host "==> VexPN-Setup.exe" -ForegroundColor Cyan
+  & $boot
+} else { throw "bootstrap\build_bootstrap.ps1 missing" }
+
+Write-Host ""
+Write-Host "Done. See dist folder." -ForegroundColor Green
+$distf = Join-Path $Root "dist"
+if (Test-Path $distf) { Get-ChildItem $distf -ErrorAction SilentlyContinue | Format-Table Name, Length, LastWriteTime }

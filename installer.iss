@@ -28,7 +28,7 @@ Compression=lzma2
 SolidCompression=yes
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
-ArchitecturesInstallIn64BitMode=x64
+ArchitecturesInstallIn64BitMode=x64os
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
