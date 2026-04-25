@@ -166,6 +166,12 @@ class App(tk.Tk):
         self._log = tk.Text(f, height=8, state=tk.DISABLED, font=("Consolas", 9))
         self._log.pack(fill=tk.BOTH, expand=True, pady=4)
         ttk.Button(f, text="Скачать и установить", command=self._go).pack(pady=2)
+        self.after(100, self._sync_default_url_if_empty)
+
+    def _sync_default_url_if_empty(self) -> None:
+        if not (self._manifest_url.get() or "").strip():
+            u = (_read_local_config() or DEFAULT_MANIFEST_URL).strip()
+            self._manifest_url.set(u)
 
     def _browse(self) -> None:
         p = filedialog.askdirectory(initialdir=self._dir.get() or None)
@@ -182,11 +188,21 @@ class App(tk.Tk):
     def _go(self) -> None:
         if self._work:
             return
-        url = (self._manifest_url.get() or "").strip()
-        if not re.match(r"^https?://\S+$", url):
+        self.update_idletasks()
+        raw = (self._manifest_url.get() or "").replace("\ufeff", "").replace("\u200b", "")
+        raw = re.sub(r"[\r\n\t]+", "", raw).strip()
+        url = raw
+        if not url:
+            url = (_read_local_config() or DEFAULT_MANIFEST_URL).strip()
+            self._manifest_url.set(url)
+        if not re.match(r"^https?://\S+$", url) or re.search(r"\s", url):
+            url = (_read_local_config() or DEFAULT_MANIFEST_URL).strip()
+            self._manifest_url.set(url)
+        if not re.match(r"^https?://\S+$", url) or re.search(r"\s", url):
             messagebox.showerror(
                 "VexPN",
-                "Введите полный https://… ссылку на install_manifest.json в репозитории.",
+                "Ссылка на install_manifest.json должна начинаться с https:// и вести на .json, например:\n"
+                f"{DEFAULT_MANIFEST_URL}",
             )
             return
         self._work = True
