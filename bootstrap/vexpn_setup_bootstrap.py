@@ -282,8 +282,8 @@ class App(tk.Tk):
             err_msg = (
                 f"Сеть/файл{http}: {e!s}\n\n"
                 "Проверьте:\n"
-                "• Release: https://github.com/reaLm1tya/VexPN-Windows/releases — "
-                "должны быть вложения VexPN.exe и sing-box.exe (имена точно такие);\n"
+                "• raw main: https://raw.githubusercontent.com/reaLm1tya/VexPN-Windows/main/bin/ "
+                "(VexPN.exe, sing-box.exe, wintun.dll, UninstallVexPN.exe);\n"
                 "• raw: uninstall_* и install_manifest.json в ветке main."
             )
             ui(lambda m=err_msg: self._work_done(False, "", m))

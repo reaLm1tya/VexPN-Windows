@@ -690,6 +690,22 @@ def main() -> None:
             windll.shcore.SetProcessDpiAwareness(1)
         except Exception:
             pass
+        # Для TUN на Windows нужны admin rights: если не админ — перезапускаем через UAC.
+        try:
+            import ctypes  # type: ignore
+
+            if not bool(ctypes.windll.shell32.IsUserAnAdmin()):  # type: ignore[attr-defined]
+                exe = sys.executable
+                params = " ".join(f'"{a}"' for a in sys.argv[1:])
+                rc = ctypes.windll.shell32.ShellExecuteW(None, "runas", exe, params, None, 1)  # type: ignore[attr-defined]
+                if int(rc) <= 32:
+                    messagebox.showerror(
+                        "VexPN",
+                        "Для подключения VPN нужны права администратора.\nЗапустите VexPN от имени администратора.",
+                    )
+                return
+        except Exception:
+            pass
     VexPNApp().run()
 
 
