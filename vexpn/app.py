@@ -138,6 +138,15 @@ class VexPNApp:
             font=_font(16, w="bold"),
         )
         self.lbl_state.pack(pady=(10, 0))
+        self.lbl_status = ctk.CTkLabel(
+            f_conn,
+            text="",
+            text_color=SECONDARY_TEXT[0],
+            font=_font(11),
+            wraplength=360,
+            justify=tk.CENTER,
+        )
+        self.lbl_status.pack(pady=(4, 0))
         ctk.CTkLabel(
             f_conn,
             text="sing-box TUN · чаще нужны права администратора",
@@ -263,6 +272,14 @@ class VexPNApp:
     def _can_connect(self) -> bool:
         k = self._active_key()
         return bool(k and k.vless_uri and k.vless_uri.strip())
+
+    def _set_status(self, text: str, error: bool = False) -> None:
+        if not hasattr(self, "lbl_status") or self.lbl_status is None:
+            return
+        self.lbl_status.configure(
+            text=(text or ""),
+            text_color="#FF3B30" if error else SECONDARY_TEXT[0],
+        )
 
     def _toggle_edit_mode(self) -> None:
         self.edit_mode = not self.edit_mode
@@ -404,17 +421,19 @@ class VexPNApp:
             self._disconnect()
             return
         if not self._can_connect():
-            messagebox.showerror("VexPN", "Нет vless-ссылки. Проверьте активный VPN тариф.")
+            self._set_status("Нет vless-ссылки. Проверьте активный VPN тариф.", error=True)
             return
         k = self._active_key()
         if not k or not k.vless_uri:
             return
         ok, msg = self.runner.start(k.vless_uri)
         if not ok:
-            messagebox.showerror("VexPN", msg or "Не удалось запустить sing-box")
+            self._set_status(msg or "Не удалось запустить sing-box", error=True)
             return
         if msg:
-            messagebox.showwarning("VexPN", msg)
+            self._set_status(msg, error=False)
+        else:
+            self._set_status("Подключение запущено...", error=False)
         self.is_connected = True
         self.connection_t0 = time.time()
         if hasattr(self, "f_timer") and self.f_timer:
@@ -426,7 +445,7 @@ class VexPNApp:
     def _poll_singbox(self) -> None:
         err = self.runner.check_alive()
         if err:
-            messagebox.showerror("VexPN", err)
+            self._set_status(err, error=True)
             self._disconnect_internal()
             return
         if self.is_connected and self.runner.running:
@@ -444,6 +463,7 @@ class VexPNApp:
         if hasattr(self, "lbl_time") and self.lbl_time is not None:
             self.lbl_time.configure(text="00:00:00")
         self.lbl_state.configure(text="Не подключено", text_color=SECONDARY_TEXT[0])
+        self._set_status("")
         self._update_connect_state()
 
     def _tick(self) -> None:
@@ -462,7 +482,7 @@ class VexPNApp:
             t = ""
         t = (t or "").strip()
         if not t:
-            messagebox.showinfo("VexPN", "Буфер пустой.")
+            self._set_status("Буфер обмена пустой.")
             return
         k = extract_vex_key(t) or t
         self._run_resolve(k, "clipboard")
@@ -535,7 +555,7 @@ class VexPNApp:
     def _run_resolve(self, raw: str, source: str) -> None:
         key = raw.strip()
         if not (key.startswith("VEX") and len(key) == 12 and key.isalnum()):
-            messagebox.showerror("VexPN", "Неверный формат ключа (12 символов, VEX…).")
+            self._set_status("Неверный формат ключа (12 символов, VEX…).", error=True)
             return
 
         def work() -> None:
@@ -550,16 +570,16 @@ class VexPNApp:
         self.resolving = False
         self._update_connect_state()
         if not r.ok and r.error_message:
-            messagebox.showerror("VexPN", r.error_message)
+            self._set_status(r.error_message, error=True)
             return
         if r.ok and not r.active and r.error_message:
-            messagebox.showerror("VexPN", r.error_message)
+            self._set_status(r.error_message, error=True)
             return
         if r.ok and not r.active:
-            messagebox.showerror("VexPN", "Нет активного VPN тарифа.")
+            self._set_status("Нет активного VPN тарифа.", error=True)
             return
         if not (r.ok and r.active and r.vless_uri):
-            messagebox.showerror("VexPN", "Сервер не вернул vless-ссылку.")
+            self._set_status("Сервер не вернул vless-ссылку.", error=True)
             return
         nk = response_to_vpn_key(r)
         for i, ex in enumerate(self.keys):
@@ -581,9 +601,9 @@ class VexPNApp:
         self._refresh_key_rows()
         self._update_connect_state()
         if source == "clipboard":
-            messagebox.showinfo("VexPN", "Ключ добавлен из буфера.")
+            self._set_status("Ключ добавлен из буфера.")
         else:
-            messagebox.showinfo("VexPN", "Ключ успешно добавлен.")
+            self._set_status("Ключ успешно добавлен.")
 
     def _build_tab_buy(self, parent) -> None:
         parent.grid_columnconfigure(0, weight=1)

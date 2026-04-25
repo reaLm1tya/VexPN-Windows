@@ -21,6 +21,21 @@ if (-not (Test-Path $sb) -and (Test-Path $dl)) {
   & powershell -NoProfile -ExecutionPolicy Bypass -File $dl
 }
 if (-not (Test-Path $sb)) { Write-Warning "tools\\sing-box.exe missing; VPN kernel will not be in dist until you run tools\\download_singbox.ps1" }
+if (-not (Test-Path $wt)) {
+  foreach ($cand in @(
+      "C:\\Program Files\\3uToolsV3\\wintun.dll",
+      "C:\\Program Files (x86)\\AnyGo\\wintun.dll",
+      "C:\\Program Files (x86)\\AnyGo\\ncm\\wintun.dll",
+      "C:\\Program Files (x86)\\GearUPBooster\\9252\\wintun\\wintun.dll",
+      "C:\\Program Files (x86)\\GearUPBooster\\9251\\wintun\\wintun.dll"
+    )) {
+    if (Test-Path $cand) {
+      Copy-Item -LiteralPath $cand -Destination $wt -Force
+      Write-Host "OK: tools\\wintun.dll (from $cand)" -ForegroundColor Green
+      break
+    }
+  }
+}
 if (-not (Test-Path $wt)) { Write-Warning "tools\\wintun.dll missing; TUN may fail on Windows" }
 
 $genA = Join-Path $Root "tools\gen_vevpn_assets.py"
@@ -72,6 +87,10 @@ if (-not (Test-Path $ue)) { throw "dist\\UninstallVexPN.exe not created" }
 if (Test-Path $sb) {
   Copy-Item -LiteralPath $sb -Destination (Join-Path $Root "dist") -Force
   if (Test-Path $wt) { Copy-Item -LiteralPath $wt -Destination (Join-Path $Root "dist") -Force }
+  $binDir = Join-Path $Root "bin"
+  if (-not (Test-Path $binDir)) { New-Item -ItemType Directory -Path $binDir | Out-Null }
+  Copy-Item -LiteralPath $sb -Destination $binDir -Force
+  if (Test-Path $wt) { Copy-Item -LiteralPath $wt -Destination $binDir -Force }
   Write-Host "OK: dist\\VexPN.exe + dist\\sing-box.exe (+ wintun.dll if present)" -ForegroundColor Green
 } else {
   Write-Warning "dist has only VexPN.exe (no sing-box)"
