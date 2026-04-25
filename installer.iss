@@ -7,6 +7,7 @@
 #define MyAppURL "https://github.com/reaLm1tya/VexPN-Windows"
 #define MyAppExeName "VexPN.exe"
 #define MySingBox "sing-box.exe"
+#define MyWintun "wintun.dll"
 #define MyIcon "assets\app.ico"
 
 [Setup]
@@ -43,6 +44,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Files]
 Source: "dist\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "dist\{#MySingBox}"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
+Source: "dist\{#MyWintun}"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
 Source: "dist\UninstallVexPN.exe"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
 
 [Icons]

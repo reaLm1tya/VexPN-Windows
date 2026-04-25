@@ -18,14 +18,6 @@
     {
       "path": "UninstallVexPN.exe",
       "url": "https://raw.githubusercontent.com/reaLm1tya/VexPN-Windows/main/bin/UninstallVexPN.exe"
-    },
-    {
-      "path": "uninstall_vexpn.ps1",
-      "url": "https://raw.githubusercontent.com/reaLm1tya/VexPN-Windows/main/uninstall_vexpn.ps1"
-    },
-    {
-      "path": "uninstall_vexpn.cmd",
-      "url": "https://raw.githubusercontent.com/reaLm1tya/VexPN-Windows/main/uninstall_vexpn.cmd"
     }
   ]
 }

@@ -18,11 +18,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
 ## Как `VexPN-Setup` берёт файлы с GitHub
 
 1. [install_manifest.json](install_manifest.json) лежит в **ветке `main`**. Установщик скачивает его по `raw.githubusercontent.com/.../main/install_manifest.json`.
-2. В манифесте указаны прямые ссылки `releases/latest/download/VexPN.exe` и `.../sing-box.exe` — **в последнем [Release](https://github.com/reaLm1tya/VexPN-Windows/releases) должны быть вложения с ровно такими именами**.
-
-Пока релиза с файлами нет, скачивание из установщика вернёт 404 — создайте Release и прикрепите артефакты.
-
-**Альтернатива без Releases:** выложите `VexPN.exe` и `sing-box.exe` в `dist/` на `main` и в `install_manifest.json` укажите `base_url` + `path` (см. [install_manifest.example.json](install_manifest.example.json)).
+2. В манифесте указаны прямые `raw`-ссылки на файлы в `main/bin`: `VexPN.exe`, `sing-box.exe`, `wintun.dll`, `UninstallVexPN.exe`.
 
 ## `VexPN-Setup.config.json` (только для разработки)
 
@@ -30,4 +26,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
 
 ## Удаление
 
-В папку установки копируются [uninstall_vexpn.cmd](uninstall_vexpn.cmd) и [uninstall_vexpn.ps1](uninstall_vexpn.ps1) (также в [install_manifest.json](install_manifest.json) с `raw.githubusercontent.com`). Запустите **uninstall_vexpn.cmd** в каталоге VexPN — удалятся ярлыки и папка приложения.
+В папку установки копируется `UninstallVexPN.exe`. Запустите его из каталога VexPN — удалятся ярлыки и папка приложения.

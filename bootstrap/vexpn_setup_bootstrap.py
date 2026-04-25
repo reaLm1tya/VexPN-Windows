@@ -259,7 +259,7 @@ class App(tk.Tk):
                     True,
                     e,
                     f"Установка завершена. Папка:\n{d}\n\n"
-                    f"Удаление: {os.path.join(d, 'UninstallVexPN.exe')}\n(или {os.path.join(d, 'uninstall_vexpn.cmd')})",
+                    f"Удаление: {os.path.join(d, 'UninstallVexPN.exe')}",
                 )
             )
         except (urllib.error.HTTPError, urllib.error.URLError, OSError) as e:
@@ -284,7 +284,7 @@ class App(tk.Tk):
                 "Проверьте:\n"
                 "• raw main: https://raw.githubusercontent.com/reaLm1tya/VexPN-Windows/main/bin/ "
                 "(VexPN.exe, sing-box.exe, wintun.dll, UninstallVexPN.exe);\n"
-                "• raw: uninstall_* и install_manifest.json в ветке main."
+                "• raw: install_manifest.json в ветке main."
             )
             ui(lambda m=err_msg: self._work_done(False, "", m))
         except (ValueError, json.JSONDecodeError, TypeError) as e:
