@@ -10,6 +10,14 @@
     {
       "path": "sing-box.exe",
       "url": "https://github.com/reaLm1tya/VexPN-Windows/releases/latest/download/sing-box.exe"
+    },
+    {
+      "path": "uninstall_vexpn.ps1",
+      "url": "https://raw.githubusercontent.com/reaLm1tya/VexPN-Windows/main/uninstall_vexpn.ps1"
+    },
+    {
+      "path": "uninstall_vexpn.cmd",
+      "url": "https://raw.githubusercontent.com/reaLm1tya/VexPN-Windows/main/uninstall_vexpn.cmd"
     }
   ]
 }

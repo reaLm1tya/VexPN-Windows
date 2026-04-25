@@ -1,6 +1,6 @@
 """
-VexPN-Setup.exe: скачивает install_manifest.json с Git (raw) / HTTPS, затем все бинарники.
-Рядом с .exe можно положить VexPN-Setup.config.json: {"manifest_url": "https://..." }.
+VexPN-Setup.exe: тихо скачивает install_manifest с GitHub (main) и перечисленные файлы.
+Переопределение URL манифеста (только для разработки): VexPN-Setup.config.json рядом с .exe.
 """
 from __future__ import annotations
 
@@ -131,12 +131,9 @@ class App(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
         self.title("Установщик VexPN")
-        self.minsize(500, 340)
-        self.geometry("580x400")
+        self.minsize(500, 280)
+        self.geometry("520x400")
 
-        cfg = _read_local_config()
-        default_u = cfg or DEFAULT_MANIFEST_URL
-        self._manifest_url = tk.StringVar(value=default_u)
         def_dir = os.path.join(os.environ.get("LOCALAPPDATA", ""), "VexPN")
         self._dir = tk.StringVar(value=def_dir)
         self._desktop = tk.IntVar(value=0)
@@ -147,10 +144,9 @@ class App(tk.Tk):
 
         ttk.Label(
             f,
-            text="URL install_manifest.json (репозиторий VexPN-Windows на GitHub, ветка main).",
-            wraplength=520,
-        ).pack(anchor=tk.W)
-        ttk.Entry(f, textvariable=self._manifest_url, width=80).pack(fill=tk.X, pady=6)
+            text="VexPN скачивается с GitHub (VexPN-Windows). Ссылка на манифест встроена — ничего вводить не нужно.",
+            wraplength=500,
+        ).pack(anchor=tk.W, pady=(0, 8))
 
         r = ttk.Frame(f)
         r.pack(fill=tk.X, pady=2)
@@ -166,12 +162,11 @@ class App(tk.Tk):
         self._log = tk.Text(f, height=8, state=tk.DISABLED, font=("Consolas", 9))
         self._log.pack(fill=tk.BOTH, expand=True, pady=4)
         ttk.Button(f, text="Скачать и установить", command=self._go).pack(pady=2)
-        self.after(100, self._sync_default_url_if_empty)
 
-    def _sync_default_url_if_empty(self) -> None:
-        if not (self._manifest_url.get() or "").strip():
-            u = (_read_local_config() or DEFAULT_MANIFEST_URL).strip()
-            self._manifest_url.set(u)
+    @staticmethod
+    def _get_manifest_url() -> str:
+        u = (_read_local_config() or DEFAULT_MANIFEST_URL or "").strip()
+        return u
 
     def _browse(self) -> None:
         p = filedialog.askdirectory(initialdir=self._dir.get() or None)
@@ -189,21 +184,9 @@ class App(tk.Tk):
         if self._work:
             return
         self.update_idletasks()
-        raw = (self._manifest_url.get() or "").replace("\ufeff", "").replace("\u200b", "")
-        raw = re.sub(r"[\r\n\t]+", "", raw).strip()
-        url = raw
-        if not url:
-            url = (_read_local_config() or DEFAULT_MANIFEST_URL).strip()
-            self._manifest_url.set(url)
+        url = self._get_manifest_url()
         if not re.match(r"^https?://\S+$", url) or re.search(r"\s", url):
-            url = (_read_local_config() or DEFAULT_MANIFEST_URL).strip()
-            self._manifest_url.set(url)
-        if not re.match(r"^https?://\S+$", url) or re.search(r"\s", url):
-            messagebox.showerror(
-                "VexPN",
-                "Ссылка на install_manifest.json должна начинаться с https:// и вести на .json, например:\n"
-                f"{DEFAULT_MANIFEST_URL}",
-            )
+            messagebox.showerror("VexPN", "Сборка VexPN-Setup без URL манифеста. Обновите VexPN-Setup.exe с GitHub.")
             return
         self._work = True
         self._bar.start(8)
@@ -272,10 +255,11 @@ class App(tk.Tk):
                 )
 
             ui(
-                lambda: self._work_done(
+                lambda e=ex, d=install_dir: self._work_done(
                     True,
-                    ex,
-                    f"Установка завершена. Папка:\n{install_dir}",
+                    e,
+                    f"Установка завершена. Папка:\n{d}\n\n"
+                    f"Удаление: {os.path.join(d, 'uninstall_vexpn.cmd')}",
                 )
             )
         except (urllib.error.HTTPError, urllib.error.URLError, OSError) as e:
