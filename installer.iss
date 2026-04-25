@@ -4,7 +4,7 @@
 #define MyAppName "VexPN"
 #define MyAppVersion "1.0.0"
 #define MyAppPublisher "VexPN"
-#define MyAppURL "https://vex-gram.ru"
+#define MyAppURL "https://github.com/reaLm1tya/VexPN-Windows"
 #define MyAppExeName "VexPN.exe"
 #define MySingBox "sing-box.exe"
 
@@ -15,7 +15,7 @@ AppVersion={#MyAppVersion}
 AppVerName={#MyAppName} {#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
-AppSupportURL={#MyAppURL}
+AppSupportURL=https://github.com/reaLm1tya/VexPN-Windows/issues
 DefaultDirName={localappdata}\VexPN
 Uninstallable=yes
 CreateUninstallRegKey=yes
