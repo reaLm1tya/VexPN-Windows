@@ -2,11 +2,11 @@
 
 
 a = Analysis(
-    ['bootstrap\\vexpn_setup_bootstrap.py'],
+    ['C:\\PythonProject3\\pc\\bootstrap\\vexpn_setup_bootstrap.py'],
     pathex=[],
     binaries=[],
     datas=[],
-    hiddenimports=[],
+    hiddenimports=['tkinter'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
