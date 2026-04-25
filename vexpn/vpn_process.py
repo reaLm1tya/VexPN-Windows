@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+from collections import deque
 from pathlib import Path
 import subprocess
 import threading
@@ -46,6 +47,7 @@ class SingBoxRunner:
         self._lock = threading.Lock()
         self._config_path: Path | None = None
         self._reader_thread: threading.Thread | None = None
+        self._last_lines: deque[str] = deque(maxlen=12)
 
     @property
     def running(self) -> bool:
@@ -113,9 +115,26 @@ class SingBoxRunner:
         try:
             for line in p.stdout:
                 if line:
-                    log.debug("sing-box: %s", line.rstrip())
+                    s = line.rstrip()
+                    self._last_lines.append(s)
+                    log.debug("sing-box: %s", s)
         except Exception:
             pass
+
+    def _last_error_hint(self) -> str:
+        txt = "\n".join(self._last_lines).lower()
+        if "access is denied" in txt:
+            return (
+                "Доступ запрещён (Access is denied). Запустите VexPN с правами администратора "
+                "и проверьте, что UAC подтверждён."
+            )
+        if "configure tun interface" in txt:
+            return "Не удалось поднять TUN интерфейс. Проверьте права администратора и драйвер wintun."
+        if "wintun" in txt:
+            return "Проблема с wintun. Установите/переустановите WireGuard или добавьте wintun.dll рядом с sing-box.exe."
+        if "invalid config" in txt or "json" in txt:
+            return "Ошибка конфигурации sing-box. Проверьте формат vless и параметры сервера."
+        return ""
 
     def stop(self) -> None:
         with self._lock:
@@ -149,7 +168,13 @@ class SingBoxRunner:
         if code is None:
             return None
         if code != 0:
-            return f"sing-box завершился с кодом {code}. Проверьте права администратора и wintun."
+            hint = self._last_error_hint()
+            tail = "\n".join(list(self._last_lines)[-3:]).strip()
+            details = f"\nПоследние строки:\n{tail}" if tail else ""
+            base = f"sing-box завершился с кодом {code}."
+            if hint:
+                return f"{base} {hint}{details}"
+            return f"{base} Проверьте права администратора и wintun.{details}"
         return "sing-box остановлен"
 
 

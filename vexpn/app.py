@@ -208,6 +208,11 @@ class VexPNApp:
     def _update_connect_state(self) -> None:
         ready = self._can_connect() and not self.resolving
         has_img = bool(self._img_con_dis and self._img_con_pau)
+        self.btn_connect.configure(state="normal" if ready else "disabled")
+        try:
+            self.btn_connect.configure(bg_color=BG)
+        except (tk.TclError, ValueError):
+            pass
         if self.is_connected and has_img:
             self.btn_connect.configure(
                 text="",
@@ -216,6 +221,7 @@ class VexPNApp:
                 fg_color=BG,
                 hover_color="#E8E0FF",
             )
+            self.btn_connect.configure(state="normal")
             return
         if self.is_connected and not has_img:
             self.btn_connect.configure(
@@ -234,6 +240,7 @@ class VexPNApp:
                 fg_color=BG,
                 hover_color="#E8E0FF",
             )
+            self.btn_connect.configure(state="normal")
             return
         if has_img and not ready:
             self.btn_connect.configure(
