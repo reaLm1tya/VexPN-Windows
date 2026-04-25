@@ -16,6 +16,7 @@ from . import __version__
 from .api_client import ResolveKeyResponse, resolve_key, response_to_vpn_key
 from .key_store import VpnKey, load_keys, save_keys
 from .settings_store import AppSettings
+from .gif_ctk import GifPlayer, ctk_image_from_asset
 from .theme import ACCENT, ACCENT_HOVER, BG, CARD, SECONDARY_TEXT
 from .vpn_process import SingBoxRunner
 
@@ -56,6 +57,8 @@ class VexPNApp:
         self.edit_mode = False
         self.selected_for_delete: set[uuid.UUID] = set()
 
+        self._img_con_dis = None
+        self._img_con_pau = None
         self._build_ui()
         self._tick()
         if not self.is_connected and hasattr(self, "f_timer"):
@@ -76,8 +79,8 @@ class VexPNApp:
             segmented_button_unselected_color="#E5E5EA",
             corner_radius=12,
         )
-        self.tab.pack(fill=tk.BOTH, expand=True, padx=8, pady=8)
-        t_home = self.tab.add("  🏠 Главная  ")
+        self.tab.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        t_home = self.tab.add("  Главная  ")
         t_buy = self.tab.add("  Купить  ")
         t_set = self.tab.add("  Настройки  ")
         self._build_tab_home(t_home)
@@ -103,17 +106,25 @@ class VexPNApp:
 
         f_conn = ctk.CTkFrame(parent, fg_color=BG)
         f_conn.grid(row=1, column=0, pady=6)
+        self._img_con_dis = ctk_image_from_asset("connection_disconnected.png", (210, 210))
+        self._img_con_pau = ctk_image_from_asset("connection_connected.png", (210, 210))
+        use_img = bool(self._img_con_dis and self._img_con_pau)
         self.btn_connect = ctk.CTkButton(
             f_conn,
-            text="▶",
-            width=200,
-            height=200,
-            corner_radius=100,
-            font=_font(64, w="bold"),
-            fg_color=ACCENT,
-            hover_color=ACCENT_HOVER,
+            text="" if use_img else "▶",
+            image=self._img_con_dis if use_img else None,
+            width=220,
+            height=220,
+            corner_radius=110,
+            font=_font(10) if use_img else _font(64, w="bold"),
+            fg_color=BG,
+            border_width=0,
+            hover_color=ACCENT if not use_img else "#EDE7FF",
+            text_color=ACCENT,
             command=self._on_toggle,
         )
+        if use_img:
+            self.btn_connect.configure(fg_color=BG, hover_color="#E8E0FF")
         self.btn_connect.pack()
         self.lbl_state = ctk.CTkLabel(
             f_conn,
@@ -176,12 +187,14 @@ class VexPNApp:
 
         sec = ctk.CTkFrame(parent, fg_color=CARD, corner_radius=12, border_width=0)
         sec.grid(row=3, column=0, sticky="nsew", pady=(0, 4), padx=0)
+        prof_hdr = ctk.CTkFrame(sec, fg_color=CARD)
+        prof_hdr.pack(anchor="w", fill=tk.X, padx=8, pady=(8, 2))
+        h_g = ctk.CTkFrame(prof_hdr, fg_color="transparent")
+        h_g.pack(side=tk.LEFT, padx=(4, 0))
+        GifPlayer(h_g, "thunder.gif", (16, 16)).pack(side=tk.LEFT, padx=(0, 8))
         ctk.CTkLabel(
-            sec,
-            text="⚡  Профили VexPN",
-            font=_font(15, w="bold"),
-            anchor="w",
-        ).pack(anchor="w", padx=12, pady=(10, 4))
+            prof_hdr, text="Профили VexPN", font=_font(16, w="bold"), text_color=ACCENT, anchor="w"
+        ).pack(side=tk.LEFT)
         self._keys_frame = ctk.CTkScrollableFrame(sec, fg_color=CARD, height=220)
         self._keys_frame.pack(fill=tk.BOTH, expand=True, padx=4, pady=(0, 8))
         self._refresh_key_rows()
@@ -189,16 +202,47 @@ class VexPNApp:
 
     def _update_connect_state(self) -> None:
         ready = self._can_connect() and not self.resolving
-        if self.is_connected:
+        has_img = bool(self._img_con_dis and self._img_con_pau)
+        if self.is_connected and has_img:
+            self.btn_connect.configure(
+                text="",
+                image=self._img_con_pau,
+                state="normal",
+                fg_color=BG,
+                hover_color="#E8E0FF",
+            )
+            return
+        if self.is_connected and not has_img:
             self.btn_connect.configure(
                 text="⏸",
                 fg_color=ACCENT,
                 state="normal",
                 hover_color=ACCENT_HOVER,
+                image=None,
             )
             return
+        if has_img and ready and not self.resolving:
+            self.btn_connect.configure(
+                text="",
+                image=self._img_con_dis,
+                state="normal",
+                fg_color=BG,
+                hover_color="#E8E0FF",
+            )
+            return
+        if has_img and not ready:
+            self.btn_connect.configure(
+                text="",
+                image=self._img_con_dis,
+                state="disabled",
+                fg_color=BG,
+                text_color=ACCENT,
+            )
+            return
+        # без PNG — только «▶»
         self.btn_connect.configure(
             text="▶",
+            image=None,
             fg_color=ACCENT if ready else "#C7C7CC",
             state="normal" if ready else "disabled",
             hover_color=ACCENT_HOVER,
@@ -271,33 +315,44 @@ class VexPNApp:
             top.pack(fill=tk.X)
             dot = "◉" if (active and not self.edit_mode) or marked else "○"
             ctk.CTkLabel(
-                top, text=dot, text_color=ACCENT, width=22, font=_font(14)
-            ).pack(side=tk.LEFT, padx=(0, 4))
+                top, text=dot, text_color=ACCENT, width=18, font=_font(13)
+            ).pack(side=tk.LEFT, padx=(0, 2))
+            GifPlayer(top, "spider-crawl-folder.gif", (20, 20)).pack(side=tk.LEFT, padx=(0, 6))
             tcol = ctk.CTkFrame(top, fg_color="transparent")
             tcol.pack(side=tk.LEFT, fill=tk.X, expand=True)
-            ctk.CTkLabel(tcol, text=k.name, font=_font(13), anchor="w").pack(anchor="w")
+            ctk.CTkLabel(tcol, text=k.name, font=_font(15), anchor="w").pack(anchor="w")
+            subl = ctk.CTkFrame(tcol, fg_color="transparent")
+            subl.pack(anchor="w", fill=tk.X)
+            GifPlayer(subl, "hour-glass.gif", (12, 12)).pack(side=tk.LEFT, padx=(0, 4), pady=(0, 2))
             ctk.CTkLabel(
-                tcol,
-                text=f"⏳  Осталось: {k.remaining_days} дн.",
+                subl,
+                text=f"Осталось: {k.remaining_days} дней",
                 text_color=SECONDARY_TEXT[0],
-                font=_font(11),
+                font=_font(12),
                 anchor="w",
-            ).pack(anchor="w")
+            ).pack(side=tk.LEFT, anchor="w")
             if not self.edit_mode:
                 ctk.CTkButton(
                     top,
                     text="Удалить",
                     width=64,
-                    height=26,
-                    font=_font(11),
-                    fg_color="#FF3B30",
-                    hover_color="#C62828",
+                    height=28,
+                    font=_font(12),
+                    fg_color="transparent",
+                    text_color="#FF3B30",
+                    hover_color="#FFEBE9",
+                    border_width=0,
                     command=lambda _k=k: self._delete_key_one(_k),
                 ).pack(side=tk.RIGHT, padx=(2, 0))
-            for w2 in (row, inner, top, tcol):
+            for w2 in (row, inner, top, tcol, subl):
                 w2.bind("<Button-1>", lambda e, _k=k: self._on_key_tap(_k))
-            for ch in (top, tcol):
+            for ch in (top, tcol, subl):
                 for c in ch.winfo_children():
+                    if (
+                        isinstance(c, ctk.CTkButton)
+                        and c.cget("text") == "Удалить"  # noqa: S105
+                    ):
+                        continue
                     c.bind("<Button-1>", lambda e, _k=k: self._on_key_tap(_k))
 
     def _delete_key_one(self, k: VpnKey) -> None:
@@ -401,14 +456,69 @@ class VexPNApp:
         self._run_resolve(k, "clipboard")
 
     def _add_manual(self) -> None:
-        d = ctk.CTkInputDialog(text="Ключ (VEX + 9 символов):", title="Ручной ввод")
-        s = d.get_input()
-        if s is None:
-            return
-        s = (s or "").strip()
-        if not s:
-            return
-        self._run_resolve((extract_vex_key(s) or s), "manual")
+        t = ctk.CTkToplevel(self.root)
+        t.title("Ручной ввод ключа")
+        t.transient(self.root)
+        t.resizable(False, False)
+        t.configure(fg_color=BG)
+        t.geometry("420x220")
+        t.grab_set()
+        ctk.CTkLabel(
+            t,
+            text="Введите ваш уникальный ключ VEX (12 символов, VEX…).",
+            text_color=SECONDARY_TEXT[0],
+            font=_font(13),
+            wraplength=380,
+            justify=tk.LEFT,
+        ).pack(anchor=tk.W, padx=20, pady=(20, 8))
+        ent = ctk.CTkEntry(
+            t, width=360, height=40, font=_font(15, mono=True), placeholder_text="VEX…"
+        )
+        ent.pack(padx=20, pady=4)
+        ent.focus_set()
+        bf = ctk.CTkFrame(t, fg_color=BG)
+        bf.pack(fill=tk.BOTH, expand=True, pady=16, padx=20)
+
+        def on_cancel() -> None:
+            t.grab_release()
+            t.destroy()
+
+        def on_add() -> None:
+            s = (ent.get() or "").strip()
+            t.grab_release()
+            t.destroy()
+            if s:
+                self._run_resolve(extract_vex_key(s) or s, "manual")
+
+        ent.bind("<Return>", lambda _e: on_add())
+        ctk.CTkButton(
+            bf,
+            text="Добавить",
+            width=120,
+            height=36,
+            font=_font(14, w="bold"),
+            fg_color=ACCENT,
+            hover_color=ACCENT_HOVER,
+            command=on_add,
+        ).pack(side=tk.RIGHT, padx=(0, 4))
+        ctk.CTkButton(
+            bf,
+            text="Отмена",
+            width=100,
+            height=36,
+            font=_font(14),
+            fg_color="#E5E5EA",
+            hover_color="#D0D0D0",
+            text_color="#1C1C1E",
+            command=on_cancel,
+        ).pack(side=tk.RIGHT)
+        self.root.update_idletasks()
+        t.update_idletasks()
+        try:
+            t.geometry("+%d+%d" % (self.root.winfo_x() + 24, self.root.winfo_y() + 64))
+        except (tk.TclError, ValueError, RuntimeError):
+            pass
+        t.lift()
 
     def _run_resolve(self, raw: str, source: str) -> None:
         key = raw.strip()
@@ -464,61 +574,72 @@ class VexPNApp:
             messagebox.showinfo("VexPN", "Ключ успешно добавлен.")
 
     def _build_tab_buy(self, parent) -> None:
+        parent.grid_columnconfigure(0, weight=1)
+        parent.grid_rowconfigure(0, weight=1)
+        parent.grid_rowconfigure(2, weight=1)
         ctk.CTkLabel(
             parent,
             text="Купить",
-            font=_font(22, w="bold"),
-            text_color=ACCENT,
-        ).pack(expand=True, pady=40, padx=20)
+            font=_font(32, w="bold"),
+            text_color="#1C1C1E",
+        ).grid(row=0, column=0, pady=(24, 0), padx=20, sticky=tk.S)
         ctk.CTkLabel(
             parent,
-            text="Как в iOS: сюда можно вынести\nоформление и оплату подписки.",
+            text="Оформление и оплата VexPN, как в приложении для iOS — скоро здесь.",
             text_color=SECONDARY_TEXT[0],
-            font=_font(13),
-            justify="center",
-        ).pack(pady=0, padx=24)
+            font=_font(15),
+            justify=tk.CENTER,
+        ).grid(row=1, column=0, pady=16, padx=28, sticky=tk.N)
         ctk.CTkButton(
             parent,
-            text="Перейти в Telegram-бота",
+            text="Открыть в Telegram",
+            width=220,
+            height=44,
+            font=_font(16, w="bold"),
             fg_color=ACCENT,
             hover_color=ACCENT_HOVER,
-            command=lambda: messagebox.showinfo("VexPN", "Укажите @бота в конфиге или откройте @бот вручную из Telegram Desktop."),
-        ).pack(pady=20)
+            corner_radius=12,
+            command=lambda: messagebox.showinfo(
+                "VexPN", "Откройте бота Vex в Telegram (как в iOS) вручную в Telegram Desktop."
+            ),
+        ).grid(row=2, column=0, pady=(0, 48), sticky=tk.N)
 
     def _build_tab_settings(self, parent) -> None:
         ctk.CTkLabel(
             parent,
             text="Настройки",
-            font=_font(20, w="bold"),
-            text_color=ACCENT,
-        ).pack(anchor="w", padx=12, pady=(8, 4))
-        s = ctk.CTkScrollableFrame(parent, fg_color=BG, height=420)
-        s.pack(fill=tk.BOTH, expand=True, padx=4, pady=4)
+            font=_font(32, w="bold"),
+            text_color="#1C1C1E",
+        ).pack(anchor=tk.W, padx=4, pady=(12, 4))
+        s = ctk.CTkScrollableFrame(parent, fg_color=BG, height=450)
+        s.pack(fill=tk.BOTH, expand=True, padx=0, pady=4)
 
-        def row(t: str, fn) -> None:
+        def group_row(t: str, fn) -> None:
+            c = ctk.CTkFrame(s, fg_color=CARD, corner_radius=10, border_width=0)
+            c.pack(fill=tk.X, pady=5, padx=2)
             ctk.CTkButton(
-                s,
+                c,
                 text=t,
-                anchor="w",
-                font=_font(14),
-                height=40,
+                anchor=tk.W,
+                font=_font(16),
+                height=50,
                 fg_color=CARD,
-                text_color=ACCENT,
-                hover_color="#E8E0FF",
+                text_color="#1C1C1E",
+                hover_color="#EFE8FF",
                 border_width=0,
                 command=fn,
-            ).pack(fill=tk.X, pady=4, padx=2)
+            ).pack(fill=tk.X, padx=0, pady=0)
 
-        row("URL API (VEXPN_API, как iOS UserDefaults)", self._open_url_dialog)
-        row("Конфиденциальность", lambda: messagebox.showinfo("VexPN", "Скоро, как в iOS."))
-        row("Сбор данных", lambda: messagebox.showinfo("VexPN", "Скоро, как в iOS."))
-        row("Условия использования", lambda: messagebox.showinfo("VexPN", "См. vex-gram.ru"))
+        group_row("Base URL (VEXPN_API_BASE_URL, как в iOS)", self._open_url_dialog)
+        group_row("Конфиденциальность", lambda: messagebox.showinfo("VexPN", "Скоро, как в iOS."))
+        group_row("Сбор данных", lambda: messagebox.showinfo("VexPN", "Скоро, как в iOS."))
+        group_row("Условия использования", lambda: messagebox.showinfo("VexPN", "См. vex-gram.ru"))
         ctk.CTkLabel(
             s,
-            text=f"Версия приложения {__version__}\nBackend по умолчанию: {self.settings.api_base_url}",
+            text=f"Версия {__version__} · {self.settings.api_base_url}",
             text_color=SECONDARY_TEXT[0],
-            font=_font(10),
-        ).pack(anchor="w", padx=6, pady=16)
+            font=_font(11),
+        ).pack(anchor=tk.W, padx=8, pady=16)
 
     def _open_url_dialog(self) -> None:
         d = ctk.CTkInputDialog(

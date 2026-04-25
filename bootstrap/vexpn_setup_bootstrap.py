@@ -259,7 +259,7 @@ class App(tk.Tk):
                     True,
                     e,
                     f"Установка завершена. Папка:\n{d}\n\n"
-                    f"Удаление: {os.path.join(d, 'uninstall_vexpn.cmd')}",
+                    f"Удаление: {os.path.join(d, 'UninstallVexPN.exe')}\n(или {os.path.join(d, 'uninstall_vexpn.cmd')})",
                 )
             )
         except (urllib.error.HTTPError, urllib.error.URLError, OSError) as e:
@@ -268,11 +268,17 @@ class App(tk.Tk):
             if isinstance(e, urllib.error.HTTPError):
                 http = f" HTTP {e.code}"
                 try:
-                    body = (e.read() or b"").decode("utf-8", errors="replace")[:400]
+                    rawb = e.read() or b""
+                    body = rawb.decode("utf-8", errors="replace")
                 except Exception:
                     body = ""
-                if body.strip():
-                    http += f"\nОтвет: {body.strip()}"
+                bstrip = body.strip()
+                if bstrip:
+                    if bstrip.lstrip()[:1] == "<" and ("html" in bstrip[:200].lower() or "DOCTYPE" in bstrip):
+                        bstrip = f"[страница HTML, обычно 404: проверьте вложения в релизе] ({len(bstrip)} симв.)"
+                    else:
+                        bstrip = bstrip[:320]
+                    http += f"\nКратко: {bstrip}"
             err_msg = (
                 f"Сеть/файл{http}: {e!s}\n\n"
                 "Проверьте:\n"

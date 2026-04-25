@@ -25,3 +25,15 @@ def exe_dir() -> Path:
     if getattr(sys, "frozen", False) and sys.executable:
         return Path(sys.executable).resolve().parent
     return Path(__file__).resolve().parent.parent
+
+
+def asset_path(name: str) -> Path | None:
+    """Ассеты из vexpn/assets/ (iOS-стиль GIF/PNG), в onefile: sys._MEIPASS/vexpn/assets."""
+    n = (name or "").replace("\\", "/").split("/")[-1]
+    if not n:
+        return None
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        p = Path(sys._MEIPASS) / "vexpn" / "assets" / n  # type: ignore[attr-defined]
+    else:
+        p = Path(__file__).resolve().parent / "assets" / n
+    return p if p.is_file() else None

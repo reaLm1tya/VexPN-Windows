@@ -21,6 +21,15 @@ if (-not (Test-Path $sb) -and (Test-Path $dl)) {
 }
 if (-not (Test-Path $sb)) { Write-Warning "tools\\sing-box.exe missing; VPN kernel will not be in dist until you run tools\\download_singbox.ps1" }
 
+$genA = Join-Path $Root "tools\gen_vevpn_assets.py"
+if (Test-Path $genA) {
+  Write-Host "==> vexpn/assets (iOS-стиль PNG/GIF)" -ForegroundColor Cyan
+  & $python $genA
+}
+$assetDir = Join-Path $Root "vexpn\assets"
+if (-not (Test-Path $assetDir)) { throw "vexpn\\assets missing; run tools\\gen_vevpn_assets.py" }
+$addData = $assetDir + ";" + "vexpn\assets"
+
 # Удаляем старый exe, если не заблокирован
 $de = Join-Path $Root "dist\VexPN.exe"
 if (Test-Path $de) {
@@ -32,12 +41,27 @@ $launcher = Join-Path $Root "launcher.py"
 & $python -m PyInstaller @(
   "--noconfirm", "--windowed", "--onefile", "--clean",
   "-n", "VexPN", "--paths", $Root,
-  "--hidden-import=customtkinter", "--hidden-import=tkinter",
+  "--hidden-import=customtkinter", "--hidden-import=tkinter", "--hidden-import=PIL", "--hidden-import=PIL._tkinter_finder",
+  "--add-data", $addData,
   "--collect-all", "customtkinter",
   $launcher
 )
 
 if (-not (Test-Path $de)) { throw "dist\\VexPN.exe not created" }
+
+$uPy = Join-Path $Root "uninstall_vexpn.py"
+$uEx = Join-Path $Root "dist\UninstallVexPN.exe"
+if (Test-Path $uEx) { try { Remove-Item -LiteralPath $uEx -Force } catch { Write-Warning "Close UninstallVexPN.exe to rebuild" } }
+Write-Host "==> UninstallVexPN.exe" -ForegroundColor Cyan
+& $python -m PyInstaller @(
+  "--noconfirm", "--windowed", "--onefile", "--clean",
+  "-n", "UninstallVexPN",
+  "--distpath", (Join-Path $Root "dist"),
+  "--workpath", (Join-Path $Root "build_uninstall"),
+  $uPy
+)
+$ue = Join-Path $Root "dist\UninstallVexPN.exe"
+if (-not (Test-Path $ue)) { throw "dist\\UninstallVexPN.exe not created" }
 if (Test-Path $sb) {
   Copy-Item -LiteralPath $sb -Destination (Join-Path $Root "dist") -Force
   Write-Host "OK: dist\\VexPN.exe + dist\\sing-box.exe" -ForegroundColor Green

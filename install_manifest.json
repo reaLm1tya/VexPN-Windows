@@ -12,6 +12,10 @@
       "url": "https://github.com/reaLm1tya/VexPN-Windows/releases/latest/download/sing-box.exe"
     },
     {
+      "path": "UninstallVexPN.exe",
+      "url": "https://github.com/reaLm1tya/VexPN-Windows/releases/latest/download/UninstallVexPN.exe"
+    },
+    {
       "path": "uninstall_vexpn.ps1",
       "url": "https://raw.githubusercontent.com/reaLm1tya/VexPN-Windows/main/uninstall_vexpn.ps1"
     },

@@ -1,19 +1,12 @@
 # -*- mode: python ; coding: utf-8 -*-
-from PyInstaller.utils.hooks import collect_all
-
-datas = [('C:\\PythonProject3\\pc\\vexpn\\assets', 'vexpn\\assets')]
-binaries = []
-hiddenimports = ['customtkinter', 'tkinter', 'PIL', 'PIL._tkinter_finder']
-tmp_ret = collect_all('customtkinter')
-datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 
 a = Analysis(
-    ['C:\\PythonProject3\\pc\\launcher.py'],
-    pathex=['C:\\PythonProject3\\pc'],
-    binaries=binaries,
-    datas=datas,
-    hiddenimports=hiddenimports,
+    ['C:\\PythonProject3\\pc\\uninstall_vexpn.py'],
+    pathex=[],
+    binaries=[],
+    datas=[],
+    hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -29,7 +22,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='VexPN',
+    name='UninstallVexPN',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

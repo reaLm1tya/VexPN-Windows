@@ -8,8 +8,11 @@ foreach ($n in @("VexPN", "sing-box", "VexPN-Setup")) {
 
 $rm = { param($P) if (Test-Path -LiteralPath $P) { Remove-Item -LiteralPath $P -Force } }
 $startMenu = [Environment]::GetFolderPath("StartMenu")
+$pro = Join-Path $startMenu "Programs"
 $desktop = [Environment]::GetFolderPath("Desktop")
-& $rm (Join-Path $startMenu "Programs\VexPN.lnk")
+& $rm (Join-Path $pro "VexPN.lnk")
+& $rm (Join-Path $pro "VexPN\VexPN.lnk")
+& $rm (Join-Path $pro "VexPN\Удалить VexPN.lnk")
 & $rm (Join-Path $desktop "VexPN.lnk")
 if ($env:OneDrive) { & $rm (Join-Path $env:OneDrive "Desktop\VexPN.lnk") }
 
